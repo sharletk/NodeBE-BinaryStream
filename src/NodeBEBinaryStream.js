@@ -35,7 +35,7 @@ class NodeBEBinaryStream {
   }
   
   feof() {
-    return this.offset >= buf.length;
+    return this.offset >= this.buffer.length;
   }
   
   entries() {
@@ -223,7 +223,7 @@ class NodeBEBinaryStream {
   }
   
   readLTriad(offset, byteLength = 3) {
-    return this.buffer.readLIntLE(offset, byteLength);
+    return this.buffer.readIntLE(offset, byteLength);
   }
   
   writeLTriad(v, offset, byteLength) {
