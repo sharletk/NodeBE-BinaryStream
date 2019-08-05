@@ -125,7 +125,7 @@ class NodeBEBinaryStream {
   
   // Byte Methods
   readByte(offset = this._offsetChange(1)) {
-    return this.buffer.readUInt8(offset);
+    return this.buffer.readUIntBE(offset, 1);
   }
   
   writeByte(v, offset) {
@@ -218,7 +218,7 @@ class NodeBEBinaryStream {
     return this.buffer.readIntBE(offset, byteLength);
   }
   
-  writeTriad(v, offset, byteLength) {
+  writeTriad(v, offset = 0, byteLength) {
     return this._writeTriad(v, offset, byteLength, "BE");
   }
   
@@ -226,7 +226,7 @@ class NodeBEBinaryStream {
     return this.buffer.readIntLE(offset, byteLength);
   }
   
-  writeLTriad(v, offset, byteLength) {
+  writeLTriad(v, offset = 0, byteLength) {
     return this._writeTriad(v, offset, byteLength, "LE");
   }
   
