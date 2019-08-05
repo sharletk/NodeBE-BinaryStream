@@ -58,8 +58,8 @@ class NodeBEBinaryStream {
     return this.buffer.slice(this.offset, this._offsetChange(length));
   }
   
-  _offsetChange(v) {
-    return (v === true ? (this.offset += value) : (this.offset += v) - v);
+  _offsetChange(v, ret) {
+    return (ret === true ? (this.offset += v) : (this.offset += v) - v);
   }
   
   writeData(buf) {
@@ -124,7 +124,7 @@ class NodeBEBinaryStream {
   
   
   // Byte Methods
-  readByte(offset) {
+  readByte(offset = this._offsetChange(1)) {
     return this.buffer.readUInt8(offset);
   }
   
@@ -132,7 +132,7 @@ class NodeBEBinaryStream {
     return this._writeByte(v, offset, "U");
   }
   
-  readSignedByte(offset) {
+  readSignedByte(offset = this._offsetChange(1)) {
     return this.buffer.readInt8(offset);
   }
   
@@ -157,7 +157,7 @@ class NodeBEBinaryStream {
   
   
   // Short Methods 
-  readShort(offset) {
+  readShort(offset = this._offsetChange(2)) {
     return this.buffer.readUInt16BE(offset);
   }
   
@@ -165,7 +165,7 @@ class NodeBEBinaryStream {
     return this._writeShort(v, offset, "UBE");
   }
   
-  readSignedShort(offset) {
+  readSignedShort(offset = this._offsetChange(2)) {
     return this.buffer.readInt16BE(offset);
   }
   
@@ -173,7 +173,7 @@ class NodeBEBinaryStream {
     return this._writeShort(v, offset, "SBE");
   }
   
-  readLShort(offset) {
+  readLShort(offset = this._offsetChange(2)) {
     return this.buffer.readUInt16LE(offset);
   }
   
@@ -181,7 +181,7 @@ class NodeBEBinaryStream {
     return this._writeShort(v, offset, "ULE");
   }
   
-  readSignedLShort(offset) {
+  readSignedLShort(offset = this._offsetChange(2)) {
     return this.buffer.readInt16LE(offset);
   }
   
@@ -214,7 +214,7 @@ class NodeBEBinaryStream {
   
   
   // Triad Methos
-  readTriad(offset, byteLength = 3) {
+  readTriad(offset = this._offsetChange(3), byteLength = 3) {
     return this.buffer.readIntBE(offset, byteLength);
   }
   
@@ -222,7 +222,7 @@ class NodeBEBinaryStream {
     return this._writeTriad(v, offset, byteLength, "BE");
   }
   
-  readLTriad(offset, byteLength = 3) {
+  readLTriad(offset = this._offsetChange(3), byteLength = 3) {
     return this.buffer.readIntLE(offset, byteLength);
   }
   
@@ -247,7 +247,7 @@ class NodeBEBinaryStream {
   
   
   // Int Methods 
-  readInt(offset) {
+  readInt(offset = this._offsetChange(4)) {
     return this.buffer.readInt32BE(offset);
   }
   
@@ -255,7 +255,7 @@ class NodeBEBinaryStream {
     return this._writeInt(v, offset, "BE");
   }
   
-  readLInt(offset) {
+  readLInt(offset = this._offsetChange(4)) {
     return this.buffer.readInt32LE(offset);
   }
   
@@ -280,7 +280,7 @@ class NodeBEBinaryStream {
   
   
   // Float Methos
-  readFloat(offset) {
+  readFloat(offset = this._offsetChange(4)) {
     return this.buffer.readFloatBE(offset);
   }
   
@@ -290,7 +290,7 @@ class NodeBEBinaryStream {
     return this._writeFloat(v, offset, "BE");
   }
   
-  readLFloat(offset) {
+  readLFloat(offset = this._offsetChange(4)) {
     return this.buffer.readFloatLE(offset);
   }
   
@@ -316,7 +316,7 @@ class NodeBEBinaryStream {
   }  
   
   // Double Methods
-  readDouble(offset) {
+  readDouble(offset = this._offsetChange(8)) {
     return this.buffer.readDoubleBE(offset);
   }
   
@@ -324,7 +324,7 @@ class NodeBEBinaryStream {
     return this._writeDouble(v, offset, "BE");
   }
   
-  readLDouble(offset) {
+  readLDouble(offset = this._offsetChange(8)) {
     return this.buffer.readDoubleLE(offset);
   }
   
@@ -349,16 +349,16 @@ class NodeBEBinaryStream {
   
   
   // Long Methods
-  readLong(offset) {
-    return this.buffer.readBigUInt64BE(offset);
+  readLong(offset = this._offsetChange(8)) {
+    return Number(this.buffer.readBigUInt64BE(offset).toString());
   }
   
   writeLong(v, offset) {
     return this._writeLong(v, offset, "BE");
   }
   
-  readLLong(offset) {
-    return this.buffer.readBigUInt64LE(offset);
+  readLLong(offset = this._offsetChange(8)) {
+    return Number(this.buffer.readBigUInt64LE(offset).toString());
   }
   
   writeLLong(v, offset) {
@@ -380,8 +380,6 @@ class NodeBEBinaryStream {
     }
     return this.writeData(buf);
   }
-  
-  readUnsignedVarInt() {}
 }
 
 module.exports = NodeBEBinaryStream;
