@@ -8,6 +8,10 @@ class NodeBEBinaryStream {
     this._encoding = "utf8";
   }
   
+  getStream() {
+    return this;
+  }
+  
   reset() {
     this.buffer = Buffer.alloc(0);
     this.offset = 0;
@@ -42,23 +46,13 @@ class NodeBEBinaryStream {
     return this.buffer.entries();
   }
   
-  readData(offset = this.offset, length) {
-    if(length === 0) {
-      return "ERROR: PROVIDE LENGTH";
-    }
+  readData(length, offsetChange = true) {
+    if(length === 0) return "ERROR: PROVIDE LENGTH";
     
-    return this.buffer.slice(offset, length);
+    return this.buffer.slice(this.offset, this._offsetChange(length, true));
   }
   
-  _readData(length) {
-    if(length === 0) {
-      return "ERROR: PROVIDE LENGTH";
-    }
-    
-    return this.buffer.slice(this.offset, this._offsetChange(length));
-  }
-  
-  _offsetChange(v, ret) {
+  _offsetChange(v, ret = false) {
     return (ret === true ? (this.offset += v) : (this.offset += v) - v);
   }
   
@@ -84,9 +78,9 @@ class NodeBEBinaryStream {
   }
     
   _append(buf) {
-    this.buffer = Buffer.concat([this.buffer, buf]);
-    this.offset += buf.length;
-    return this;
+    return this.buffer = Buffer.concat([this.buffer, buf]);
+    //this.offset += buf.length;
+    //return this;
   }
   
   toJSON() {
@@ -110,7 +104,10 @@ class NodeBEBinaryStream {
   }
   
   readRemaining() {
-    return this.buffer.slice(this.buffer.length);
+    let buf = this.buffer.slice(this.offset);
+    this.offset = this.buffer.length;
+    
+    return buf;
   }
   
   // Bool Methods  
@@ -121,18 +118,18 @@ class NodeBEBinaryStream {
   writeBool(b) {
     return this.writeByte(b === true ? 1 : 0);
   }
-  
+    
   
   // Byte Methods
-  readByte(offset = this._offsetChange(1)) {
-    return this.buffer.readUIntBE(offset, 1);
+  readByte(offset = this._offsetChange(1)) { 
+    return this.buffer.readUInt8(offset);
   }
   
   writeByte(v, offset) {
     return this._writeByte(v, offset, "U");
   }
   
-  readSignedByte(offset = this._offsetChange(1)) {
+  readSignedByte(offset = this._offsetChange(1)) { 
     return this.buffer.readInt8(offset);
   }
   
@@ -157,7 +154,7 @@ class NodeBEBinaryStream {
   
   
   // Short Methods 
-  readShort(offset = this._offsetChange(2)) {
+  readShort(offset = this._offsetChange(2)) { 
     return this.buffer.readUInt16BE(offset);
   }
   
@@ -165,7 +162,7 @@ class NodeBEBinaryStream {
     return this._writeShort(v, offset, "UBE");
   }
   
-  readSignedShort(offset = this._offsetChange(2)) {
+  readSignedShort(offset = this._offsetChange(2)) { 
     return this.buffer.readInt16BE(offset);
   }
   
@@ -173,7 +170,7 @@ class NodeBEBinaryStream {
     return this._writeShort(v, offset, "SBE");
   }
   
-  readLShort(offset = this._offsetChange(2)) {
+  readLShort(offset = this._offsetChange(2)) { 
     return this.buffer.readUInt16LE(offset);
   }
   
@@ -214,7 +211,7 @@ class NodeBEBinaryStream {
   
   
   // Triad Methos
-  readTriad(offset = this._offsetChange(3), byteLength = 3) {
+  readTriad(offset = this._offsetChange(3), byteLength = 3) { 
     return this.buffer.readIntBE(offset, byteLength);
   }
   
@@ -222,7 +219,7 @@ class NodeBEBinaryStream {
     return this._writeTriad(v, offset, byteLength, "BE");
   }
   
-  readLTriad(offset = this._offsetChange(3), byteLength = 3) {
+  readLTriad(offset = this._offsetChange(3), byteLength = 3) { 
     return this.buffer.readIntLE(offset, byteLength);
   }
   
@@ -247,7 +244,7 @@ class NodeBEBinaryStream {
   
   
   // Int Methods 
-  readInt(offset = this._offsetChange(4)) {
+  readInt(offset = this._offsetChange(4)) { 
     return this.buffer.readInt32BE(offset);
   }
   
@@ -280,21 +277,25 @@ class NodeBEBinaryStream {
   
   
   // Float Methos
-  readFloat(offset = this._offsetChange(4)) {
+  readFloat(offset = this._offsetChange(4)) { 
     return this.buffer.readFloatBE(offset);
   }
   
-  readRoundedFloat() {}
+  readRoundedFloat() {
+    
+  }
   
   writeFloat(v, offset) {
     return this._writeFloat(v, offset, "BE");
   }
   
-  readLFloat(offset = this._offsetChange(4)) {
+  readLFloat(offset = this._offsetChange(4)) { 
     return this.buffer.readFloatLE(offset);
   }
   
-  readRoundedLFloat() {}
+  readRoundedLFloat() {
+    
+  }
   
   writeLFloat(v, offset) {
     return this._writeFloat(v, offset, "LE");
@@ -316,7 +317,7 @@ class NodeBEBinaryStream {
   }  
   
   // Double Methods
-  readDouble(offset = this._offsetChange(8)) {
+  readDouble(offset = this._offsetChange(8)) { 
     return this.buffer.readDoubleBE(offset);
   }
   
@@ -349,7 +350,7 @@ class NodeBEBinaryStream {
   
   
   // Long Methods
-  readLong(offset = this._offsetChange(8)) {
+  readLong(offset = this._offsetChange(8)) { 
     return Number(this.buffer.readBigUInt64BE(offset).toString());
   }
   
@@ -357,7 +358,7 @@ class NodeBEBinaryStream {
     return this._writeLong(v, offset, "BE");
   }
   
-  readLLong(offset = this._offsetChange(8)) {
+  readLLong(offset = this._offsetChange(8)) { 
     return Number(this.buffer.readBigUInt64LE(offset).toString());
   }
   
@@ -379,6 +380,99 @@ class NodeBEBinaryStream {
       break;
     }
     return this.writeData(buf);
+  }
+  
+  
+  // VarInt Methods  
+  readUnsignedVarInt(buffer = this.getBuffer(), offset = this.getOffset()) {
+    let value = 0;
+    
+    for (let i = 0; i <= 28; i += 7) {
+      if (!(buffer[offset])) {
+        throw new Error("No bytes left in buffer!");
+      }
+      
+      let b = this.readByte();
+      value |= ((b & 0x7f) << i);
+      
+      if ((b & 0x80) === 0) return value;
+    }
+    
+    throw new Error("VarInt did not terminate after 5 bytes!");
+  }
+  
+  readVarInt(buffer = this.getBuffer(), offset = this.getOffset()) {
+    let raw = this.readUnsignedVarInt(buffer, offset);
+    
+    let temp = (((raw << 63) >> 63) ^ raw) >> 1;
+    
+    return temp ^ (raw & (1 << 63));
+  }
+  
+  writeUnsignedVarInt(value) {    
+    value &= 0xffffffff;    
+    for (let i = 0; i < 5; ++i) {
+      if ((value >> 7) !== 0) {
+        this.writeByte(value | 0x80);
+      } else {
+        this.writeByte(value & 0x7f);
+        return this;
+      }
+      
+      value = ((value >> 7) & (Number.MAX_SAFE_INTEGER >> 6));
+    }
+    
+    throw new Error("Value too large to ve encoded as a VarInt.");
+  }
+  
+  writeVarInt(value) {
+    value = (value << 32 >> 32);
+    return this.writeUnsignedVarInt((value << 1) ^ (value >> 31));
+  }
+  
+  
+  // VarLong Methods
+  readUnsignedVarLong(buffer = this.getBuffer(), offset = this.getOffset()) {
+    let value = 0;
+    for (let i = 0; i <= 63; i += 7) {
+      if (!(buffer[offset])) {
+        throw new Error("No bytes left in buffer!");
+      }
+      
+      let b = this.readByte();
+      value |= ((b & 0x7f) << i);
+      
+      if ((b & 0x80) === 0) return value;
+    }
+    
+    throw new Error("VarLong did not terminate after 10 bytes!");
+  }
+  
+  readVarLong(buffer = this.getBuffer(), offset = this.getOffset()) {
+    let raw = this.readUnsignedVarLong(buffer, offset);
+    
+    let temp = (((raw << 63) >> 63) ^ raw) >> 1;
+    
+    return temp ^ (raw & (1 << 63));
+  }
+  
+  writeUnsignedVarLong(value) {
+    for (let i = 0; i < 10; ++i) {
+      if ((value >> 7) !== 0) {
+        this.writeByte(value | 0x80);
+      } else {
+        this.writeByte(value & 0x7f);
+        return this;
+      }
+      
+      value = ((value >> 7) & (Number.MAX_SAFE_INTEGER >> 6));
+    }
+    
+    throw new Error("Value too large to ve encoded as a VarLong.");
+  }
+  
+  writeVarLong(value) {
+    return this.writeUnsignedVarLong((value << 1) ^ (value >> 63));
   }
 }
 
